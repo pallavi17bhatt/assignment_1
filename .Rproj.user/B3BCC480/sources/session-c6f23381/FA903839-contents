@@ -1,0 +1,65 @@
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+
+# Load the data
+data <- read.csv("sales_data.csv")
+
+# Filter out non-finite quantities and quantities greater than 1000
+cleaned_data <- data %>%
+  filter(Country != "Unknown", !is.na(Country), Quantity > 0, is.finite(Quantity)) %>%  # Keep only positive finite quantities
+  filter(Quantity <= 500)  # Filter out quantities greater than 1000 for this plot
+
+# Histogram with a color gradient based on Quantity
+histogram_for_frequency_vs_quantity <- ggplot(cleaned_data, aes(x = Quantity, fill = ..count..)) +
+  geom_histogram(binwidth = 5, color = "black", alpha = 0.7) +
+  scale_fill_gradient(low = "blue", high = "grey") +  # Color gradient from blue to red
+  labs(title = "Histogram of Quantities Sold (Gradient Coloring)", x = "Quantity", y = "Frequency") +
+  theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "lightyellow", color = NA),  # Set the plot area background
+    plot.background = element_rect(fill = "lightblue", color = "black"),  # Set the overall plot background
+    axis.text = element_text(color = "black"),          # Change axis text to black
+    axis.title = element_text(color = "black"),         # Change axis title to black
+    plot.title = element_text(color = "black", face = "bold")  # Change plot title to black
+  )
+ggsave("histogram_for_frequency_vs_quantity.png", plot = histogram_for_frequency_vs_quantity, width = 8, height = 6)
+
+
+# Summary statistics for Quantity
+summary_stats <- cleaned_data %>%
+  summarise(
+    Mean = mean(Quantity, na.rm = TRUE),
+    Median = median(Quantity, na.rm = TRUE),
+    StdDev = sd(Quantity, na.rm = TRUE),
+    IQR = IQR(Quantity, na.rm = TRUE),
+    Min = min(Quantity, na.rm = TRUE),
+    Max = max(Quantity, na.rm = TRUE),
+    Q1 = quantile(Quantity, 0.25, na.rm = TRUE),
+    Q3 = quantile(Quantity, 0.75, na.rm = TRUE)
+  )
+
+summary_stats
+# Assume you have a dataframe called summary_stats
+write.csv(summary_stats, "summary_statistics.csv", row.names = FALSE)
+
+
+# Create a box-and-whisker plot for Quantity across different countries
+boxplot_for_quantity_sold_vs_country <- ggplot(cleaned_data, aes(x = Country, y = Quantity)) +
+  geom_boxplot(fill = "orange", color = "black", alpha = 0.7) +
+  labs(title = "Boxplot of Quantity Sold across Countries", x = "Country", y = "Quantity Sold") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for better readability
+  theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "lightyellow", color = NA),  # Set the plot area background
+    plot.background = element_rect(fill = "lightblue", color = "black"),  # Set the overall plot background
+    axis.text.x = element_text(angle = 45, hjust = 1, color = "black"),   # Rotate x-axis labels and set text to black
+    axis.text.y = element_text(color = "black"),  # Set y-axis text to black
+    axis.title = element_text(color = "black"),   # Set axis title to black
+    plot.title = element_text(color = "black", face = "bold")  # Set plot title to black
+  )
+
+ggsave("boxplot_for_quantity_sold_vs_country.png", plot = boxplot_for_quantity_sold_vs_country, width = 8, height = 6)
+
+
+
